@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <title>IBGM </title>
+  <link rel="icon" href="/logo/Minimalist Digital Icon Design.png" type="image/png" />
+  <link rel="stylesheet" href="style.css" />
+  
+  
+</head>
+
+<body>
+  <!-- User Info Modal -->
+<!-- User Info Modal - display: flex দিয়ে শুরু করব -->
+<div id="userInfoModal" class="modal" style="display: flex;">
+  <div class="modal-content">
+    <h2>আপনার তথ্য দিন</h2>
+    <form id="userInfoForm">
+      <div class="form-group">
+        <label for="userName">নাম:</label>
+        <input type="text" id="userName" required placeholder="আপনার নাম লিখুন">
+      </div>
+      <div class="form-group">
+        <label for="userAge">বয়স:</label>
+        <input type="number" id="userAge" required min="1" max="120" placeholder="আপনার বয়স লিখুন">
+      </div>
+      <button type="submit" class="primary">জমা দিন</button>
+    </form>
+  </div>
+</div>
+
+<!-- মূল কন্টেন্টকে initially hidden রাখব -->
+<div id="mainContent" style="display: none;">
+  <!-- আপনার সমস্ত মূল কন্টেন্ট এখানে থাকবে -->
+  <input type="hidden" id="currentUserId" value="" />
+  <div id="like-star-container" class="like-star-container">...</div>
+  <!-- বাকি সবকিছু -->
+</div>
+  <!-- Hidden holder for the current logged-in user's ID.
+       Your server or initial JS should set its value so the UI can use it. -->
+  <input type="hidden" id="currentUserId" value="" />
+
+  <!-- ====== LIKE STAR (center-top) ====== -->
+  <div id="like-star-container" class="like-star-container" aria-live="polite" aria-atomic="true">
+    <button
+      id="likeStar"
+      class="like-star-btn"
+      type="button"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      aria-controls="starLegend"
+      title="স্টার দেখাও/লুকাও — কত লাইক হলে কোন রঙ হবে"
+    >
+      <svg id="likeStarSvg" class="like-star-icon" viewBox="0 0 24 24" width="36" height="36" aria-hidden="true" focusable="false">
+        <path d="M12 .587l3.668 7.431L23.4 9.75l-5.7 5.556L19.335 24 12 19.897 4.665 24l1.635-8.694L.6 9.75l7.732-1.732L12 .587z" fill="currentColor"/>
+      </svg>
+      <span class="sr-only">স্টার লেজেন্ড খুলুন</span>
+    </button>
+
+    <div id="starLegend" class="star-legend" role="dialog" aria-label="স্টার লিস্ট" hidden>
+      <div class="star-legend-header">
+        <strong>স্টার লিস্ট — লাইক অনুযায়ী রং</strong>
+        <button id="closeStarLegend" class="star-legend-close" aria-label="লিস্ট বন্ধ">×</button>
+      </div>
+
+      <ul id="starLegendList" class="star-legend-list">
+        <li class="star-legend-item" data-likes="25">
+          <span class="legend-swatch" aria-hidden="true" style="background:#C0C0C0"></span>
+          <span class="legend-text">২৫ লাইক — Silver (সিলভার)</span>
+        </li>
+        <li class="star-legend-item" data-likes="50">
+          <span class="legend-swatch" aria-hidden="true" style="background:#D4AF37"></span>
+          <span class="legend-text">৫০ লাইক — Gold (গোল্ডেন)</span>
+        </li>
+        <li class="star-legend-item" data-likes="75">
+          <span class="legend-swatch" aria-hidden="true" style="background:#40E0D0"></span>
+          <span class="legend-text">৭৫ লাইক — Turquoise</span>
+        </li>
+        <li class="star-legend-item" data-likes="100">
+          <span class="legend-swatch" aria-hidden="true" style="background:#FF007F"></span>
+          <span class="legend-text">১০০ লাইক — Rose</span>
+        </li>
+        <li class="star-legend-item" data-likes="125">
+          <span class="legend-swatch" aria-hidden="true" style="background:#8A2BE2"></span>
+          <span class="legend-text">১২৫ লাইক — Purple</span>
+        </li>
+        <li class="star-legend-item" data-likes="150">
+          <span class="legend-swatch" aria-hidden="true" style="background:#87CEEB"></span>
+          <span class="legend-text">১৫০ লাইক — Sky</span>
+        </li>
+        <li class="star-legend-item" data-likes="175">
+          <span class="legend-swatch" aria-hidden="true" style="background:#FFA500"></span>
+          <span class="legend-text">১৭৫ লাইক — Orange</span>
+        </li>
+        <li class="star-legend-item" data-likes="200">
+          <span class="legend-swatch" aria-hidden="true" style="background:#50C878"></span>
+          <span class="legend-text">২০০ লাইক — Emerald</span>
+        </li>
+      </ul>
+
+      <div class="star-legend-footer">
+        <small>প্রতি ২৫ লাইক এ রং পরিবর্তন হবে — উপরের তালিকা কনফিগারেবল।</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Users Widget (top-left). CSS will position it fixed at top-left. -->
+  <div id="active-users-widget" class="active-users-widget" role="region" aria-label="Active users" data-widget="active-users">
+    <button
+      id="active-users-toggle"
+      class="au-toggle"
+      aria-expanded="false"
+      aria-controls="active-users-list"
+      title="অনলাইন ব্যবহারকারীরা দেখাও/লুকাও"
+      type="button"
+    >
+      
+      <span id="active-users-count" class="au-count" aria-live="polite">0</span>
+      
+    </button>
+
+    <div id="active-users-list" class="au-list" hidden aria-hidden="true" role="dialog" aria-label="Online users list">
+      <div class="au-list-header">
+        <strong>অনলাইন ব্যবহারকারী</strong>
+        <button id="au-list-close" class="au-close" aria-label="লিস্ট বন্ধ" title="বন্ধ করুন">×</button>
+      </div>
+
+      <template id="au-item-template">
+        <li class="au-item" role="listitem" data-user-id="">
+          <span class="au-item-name" aria-hidden="false">User name</span>
+          <span class="au-item-id" aria-label="User ID">#id</span>
+        </li>
+      </template>
+
+      <ul id="active-users-ul" class="au-ul" role="list" aria-live="polite">
+        <li class="au-empty">কেউ অনলাইন নেই</li>
+      </ul>
+
+      <div class="au-list-footer">
+        <button id="au-copy-list" class="au-action" type="button" title="অনলাইনদের নাম/আইডি কপি করুন">কপি</button>
+        <button id="au-refresh" class="au-action" type="button" title="রিফ্রেশ">রিফ্রেশ</button>
+      </div>
+    </div>
+
+    <noscript>
+      <div class="au-noscript">জাভাস্ক্রিপ্ট চালু করুন — অনলাইন কাউন্ট দেখার জন্য প্রয়োজন।</div>
+    </noscript>
+  </div>
+
+  <!-- Three-dot menu (left side) -->
+  <div id="three-dot-container" class="three-dot-container" aria-hidden="false">
+    <button id="threeDotToggle" class="three-dot-btn" aria-haspopup="true" aria-expanded="false" aria-controls="threeDotDropdown" title="More">
+      ⋯
+    </button>
+
+    <div id="threeDotDropdown" class="three-dot-dropdown" role="menu" hidden aria-hidden="true">
+      <button id="open-private-messenger" class="three-dot-item" role="menuitem" type="button">(Private) Messenger </button>
+      <button id="open-group-messages" class="three-dot-item" role="menuitem" type="button">Group Messages</button>
+      <div class="totals-bar" role="region" aria-label="মোট লাইক ও পোস্ট" data-likes-threshold="20">
+    <div class="totals-inner">
+      <div class="total-block total-likes" title="মোট লাইক">
+        <div class="total-value" id="totalLikes">0</div>
+        <div class="total-label">মোট লাইক</div>
+      </div>
+
+      <div class="totals-divider" aria-hidden="true">·</div>
+
+      <div class="total-block total-posts" title="মোট পোস্ট">
+        <div class="total-value" id="totalPosts">0</div>
+        <div class="total-label">মোট পোস্ট</div>
+      </div>
+    </div>
+  </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <header class="app">
+      <div style="display:flex;align-items:center">
+        <div class="logo" aria-hidden="true">IB</div>
+        <h1 class="title">IBGM</h1>
+      </div>
+
+      <div class="header-right">
+        <div class="search-wrap" title="Search by user name or ID (partial OK)">
+          <input id="searchInput" placeholder="Search name or ID" aria-label="Search posts" />
+          <button id="searchBtn" aria-label="Search">Search</button>
+        </div>
+
+        <div class="id-badge" id="idBadge" title="Click to copy your ID" role="button" aria-pressed="false">
+          You: —
+        </div>
+      </div>
+    </header>
+
+    <section class="card upload" aria-label="Upload image">
+      <input class="file" type="file" id="imageInput" accept="image/*" />
+
+  <!-- কাস্টম লোগো -->
+  <label for="imageInput" class="upload-label">
+    <img src="https://cdn-icons-png.flaticon.com/512/685/685655.png" alt="Upload" />
+    
+  </label>
+  <span id="fileName">কোন ফাইল সিলেক্ট করা হয়নি</span>
+      
+      <textarea id="caption" placeholder="Caption (optional)"></textarea>
+      <button class="primary" id="uploadBtn">Upload</button>
+      <small id="uploadNote" style="color:var(--muted)">We auto-resize for best viewing — full image always visible in viewer.</small>
+    </section>
+
+    <div id="searchInfo" style="display:none;color:var(--muted);margin-top:10px"></div>
+
+    <!-- FEED: JS will render post items here by cloning #post-template and filling data-post-id, data-author-id, etc. -->
+    <section id="feed" aria-live="polite"></section>
+
+    <p style="margin-top:18px;color:var(--muted)">JEHAD HASAN JHR </p>
+  </div>
+
+  <!-- Post template: clone this with JS for each post. -->
+  <template id="post-template">
+    <article class="post" role="article" data-post-id="" data-author-id="" aria-label="User post">
+      <header class="post-header">
+        <div class="post-meta">
+          <span class="post-author">Author name</span>
+          <span class="post-time" aria-hidden="true">· now</span>
+        </div>
+
+        <!-- Three-dot per-post menu button. JS should set data-post-id on the button and on the menu instance. -->
+        <div class="post-actions">
+          <button class="post-menu-btn" type="button" aria-haspopup="true" aria-expanded="false" title="More post actions" data-post-id="">
+            <span class="sr-only">More actions</span>
+            ⋯
+          </button>
+
+          <!-- Menu (hidden by default). JS should toggle `hidden` and aria-expanded accordingly. -->
+          <div class="post-menu" role="menu" hidden aria-hidden="true" data-post-id="">
+            <button class="post-menu-item post-edit-btn" type="button" role="menuitem" data-action="edit" data-post-id="">পোস্ট এডিট</button>
+            <button class="post-menu-item post-delete-btn" type="button" role="menuitem" data-action="delete" data-post-id="">পোস্ট ডিলিট</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="post-body">
+        <div class="post-image-wrap">
+          <img class="post-image" src="" alt="Post image" />
+        </div>
+        <div class="post-caption" aria-live="polite">Caption goes here</div>
+      </div>
+
+      <footer class="post-footer">
+        <div class="post-stats">
+          <button class="like-btn" type="button" aria-pressed="false" title="Like this post">Like</button>
+          <span class="likes-count" aria-live="polite">0</span>
+        </div>
+      </footer>
+
+      <!-- Inline edit form (hidden). When user chooses 'Edit', JS should either open this or a modal. -->
+      <form class="post-edit-form" hidden aria-hidden="true" data-post-id="">
+        <textarea name="editCaption" class="edit-caption" rows="3" placeholder="Edit caption..."></textarea>
+        <div class="edit-controls">
+          <button type="button" class="edit-cancel">বাতিল</button>
+          <button type="submit" class="edit-save">সংরক্ষণ</button>
+        </div>
+      </form>
+    </article>
+  </template>
+
+  <!-- Lightbox / Viewer -->
+  <div id="lightboxOverlay" class="lightbox-overlay" aria-hidden="true" role="dialog" aria-label="Image viewer">
+    <div class="lightbox-inner">
+      <div class="lightbox-canvas" tabindex="0">
+        <img id="lbImg" src="" alt="" draggable="false" />
+      </div>
+      <div class="lb-controls" role="toolbar" aria-label="Viewer controls">
+        <button id="zoomIn" class="lb-btn" title="Zoom in">＋</button>
+        <button id="zoomOut" class="lb-btn" title="Zoom out">－</button>
+        <button id="resetZoom" class="lb-btn" title="Reset zoom">○</button>
+        <button id="closeLBox" class="lb-btn" title="Close viewer">✕</button>
+      </div>
+      <div id="lbCaption" class="lb-caption"></div>
+    </div>
+  </div>
+
+  <!-- Chat UI: floating button + panel (global messages) -->
+  <button id="chatToggleBtn" class="chat-button" aria-label="Open global messages">💬
+    <span id="chatUnread" class="chat-unread" style="display:none">0</span>
+  </button>
+
+  <div id="chatPanel" class="chat-panel" style="display:none" role="dialog" aria-label="Global messages">
+    <div class="chat-header">
+      <div>Everyone's HI HI</div>
+      <div>
+        <button id="chatCloseBtn" title="Close" style="border:0;background:transparent;color:var(--muted);cursor:pointer">✕</button>
+      </div>
+    </div>
+    <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="Message everyone..." aria-label="Type a message" />
+      <button id="chatSendBtn">Send</button>
+    </div>
+  </div>
+
+  <!-- Private Messenger Panel -->
+  <aside id="privateMessengerPanel" class="private-messenger-panel" role="dialog" aria-label="Private messenger" aria-hidden="true" hidden>
+    <header class="pm-header">
+      <div class="pm-title">Messenger</div>
+      <div class="pm-controls">
+        <button id="pmCloseBtn" class="pm-close" aria-label="Close messenger">✕</button>
+      </div>
+    </header>
+
+    <div class="pm-body">
+      <section class="pm-contacts" aria-label="Contacts">
+        <div class="pm-contacts-header">
+          <strong>Contacts</strong>
+          <button id="pmRefresh" class="pm-refresh" title="Refresh contacts">↻</button>
+        </div>
+
+        <template id="pm-user-template">
+          <li class="pm-user-item" data-user-id="">
+            <button class="pm-user-btn" type="button" aria-label="Open chat with user">
+              <span class="pm-user-name">Name</span>
+              <span class="pm-user-id" aria-label="User ID">#123</span>
+              <span class="pm-user-status" aria-hidden="true">●</span>
+            </button>
+          </li>
+        </template>
+
+        <ul id="pm-user-list" class="pm-user-list" role="list" aria-live="polite">
+          <li class="pm-empty">কোনো যোগাযোগ নেই</li>
+        </ul>
+      </section>
+
+      <section id="pm-chat-area" class="pm-chat-area" aria-label="Chat area" hidden>
+        <div class="pm-chat-header">
+          <button id="pm-back-to-list" class="pm-back" aria-label="Back to contacts">←</button>
+          <h4 id="pm-chat-with-name">Person</h4>
+        </div>
+
+        <div id="pm-chat-messages" class="pm-chat-messages" aria-live="polite">
+        </div>
+
+        <form id="pm-chat-form" class="pm-chat-form" autocomplete="off">
+          <input id="pmChatInput" type="text" placeholder="Type a private message..." aria-label="Type a private message" />
+          <button id="pmSendBtn" type="submit">Send</button>
+        </form>
+      </section>
+    </div>
+  </aside>
+
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" defer></script>
+  <!-- script.js will wire up socket events, toggle behavior, star color logic, and list rendering -->
+  <script src="script.js" defer></script>
+</body>
+</html>
